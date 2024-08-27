@@ -1,0 +1,232 @@
+const Alexa = require('ask-sdk-core');
+
+const questions = [
+    {
+        question: "What does AI stand for?",
+        options: ["1. Artificial Intelligence", "2. Automated Information", "3. Applied Informatics", "4. Analog Input"],
+        answer: 1
+    },
+    {
+        question: "Who is known as the father of AI?",
+        options: ["1. Alan Turing", "2. John McCarthy", "3. Marvin Minsky", "4. Geoffrey Hinton"],
+        answer: 2
+    },
+    {
+        question: "Which programming language is most commonly used for AI?",
+        options: ["1. Java", "2. Python", "3. C++", "4. JavaScript"],
+        answer: 2
+    },
+    {
+        question: "What is the goal of Artificial General Intelligence?",
+        options: ["1. To solve specific tasks", "2. To mimic human intelligence", "3. To manage databases", "4. To create virtual reality"],
+        answer: 2
+    },
+    {
+        question: "Which algorithm is most associated with learning from labeled data?",
+        options: ["1. Supervised Learning", "2. Unsupervised Learning", "3. Reinforcement Learning", "4. Genetic Algorithm"],
+        answer: 1
+    },
+    {
+        question: "What is the process of training a machine to perform tasks by feeding it data called?",
+        options: ["1. Programming", "2. Data Mining", "3. Machine Learning", "4. Data Structuring"],
+        answer: 3
+    },
+    {
+        question: "Which of the following is a popular AI framework developed by Google?",
+        options: ["1. PyTorch", "2. TensorFlow", "3. Scikit-learn", "4. Theano"],
+        answer: 2
+    },
+    {
+        question: "What type of AI is used in self-driving cars?",
+        options: ["1. Narrow AI", "2. General AI", "3. Strong AI", "4. Weak AI"],
+        answer: 1
+    },
+    {
+        question: "Which AI technique is inspired by the human brain?",
+        options: ["1. Neural Networks", "2. Decision Trees", "3. Bayesian Networks", "4. Support Vector Machines"],
+        answer: 1
+    },
+    {
+        question: "What is the term for AI systems that can learn and adapt over time?",
+        options: ["1. Static AI", "2. Dynamic AI", "3. Adaptive AI", "4. Flexible AI"],
+        answer: 3
+    }
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+
+const LaunchRequestHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
+    },
+    handle(handlerInput) {
+        currentQuestionIndex = 0;
+        score = 0;
+        const question = questions[currentQuestionIndex].question;
+        const options = questions[currentQuestionIndex].options.join(", ");
+        const speakOutput = `Welcome to the AI Quiz! Here is your first question: ${question}. Your options are: ${options}.`;
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const QuizIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'QuizIntent';
+    },
+    handle(handlerInput) {
+        currentQuestionIndex = 0;
+        score = 0;
+        const question = questions[currentQuestionIndex].question;
+        const options = questions[currentQuestionIndex].options.join(", ");
+        const speakOutput = `Here is your first question: ${question}. Your options are: ${options}.`;
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const AnswerIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AnswerIntent';
+    },
+    handle(handlerInput) {
+        const userAnswer = parseInt(Alexa.getSlotValue(handlerInput.requestEnvelope, 'Answer'), 10);
+        const correctAnswer = questions[currentQuestionIndex].answer;
+
+        let speakOutput = '';
+
+        if (userAnswer === correctAnswer) {
+            score++;
+            speakOutput = `Correct! `;
+        } else {
+            speakOutput = `Wrong answer. The correct answer is option ${correctAnswer}. `;
+        }
+
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            const question = questions[currentQuestionIndex].question;
+            const options = questions[currentQuestionIndex].options.join(", ");
+            speakOutput += `Here is your next question: ${question}. Your options are: ${options}.`;
+        } else {
+            speakOutput += `You've completed the AI quiz. Your score is ${score} out of 10. `;
+            if (score > 7) {
+                speakOutput += `Congratulations! You did a great job!`;
+            } else {
+                speakOutput += `Better luck next time!`;
+            }
+        }
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const HelpIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
+    },
+    handle(handlerInput) {
+        const speakOutput = 'You can say start quiz to begin the game!';
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const CancelAndStopIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.CancelIntent'
+                || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StopIntent');
+    },
+    handle(handlerInput) {
+        const speakOutput = 'Goodbye!';
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .getResponse();
+    }
+};
+
+const FallbackIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.FallbackIntent';
+    },
+    handle(handlerInput) {
+        const speakOutput = 'Sorry, I didn\'t get that. You can say start quiz to begin the game.';
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const SessionEndedRequestHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'SessionEndedRequest';
+    },
+    handle(handlerInput) {
+        // Any cleanup logic goes here.
+        return handlerInput.responseBuilder.getResponse();
+    }
+};
+
+const IntentReflectorHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest';
+    },
+    handle(handlerInput) {
+        const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
+        const speakOutput = `You just triggered ${intentName}`;
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .getResponse();
+    }
+};
+
+const ErrorHandler = {
+    canHandle() {
+        return true;
+    },
+    handle(handlerInput, error) {
+        const speakOutput = 'Sorry, I had trouble doing what you asked. Please try again.';
+        console.log(`~~~~ Error handled: ${error.message}`);
+
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+exports.handler = Alexa.SkillBuilders.custom()
+    .addRequestHandlers(
+        LaunchRequestHandler,
+        QuizIntentHandler,
+        AnswerIntentHandler,
+        HelpIntentHandler,
+        CancelAndStopIntentHandler,
+        FallbackIntentHandler,
+        SessionEndedRequestHandler,
+        IntentReflectorHandler
+    )
+    .addErrorHandlers(
+        ErrorHandler
+    )
+    .lambda();
